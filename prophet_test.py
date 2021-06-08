@@ -9,7 +9,7 @@ import sys
 sys.path.append('/Users/zc/PycharmProjects/fbprophet/')
 import regression_evaluation_def as ref
 pd.set_option('mode.chained_assignment', None)
-# pd.set_option('display.max_rows', None)
+pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 # 获取计算所需原始数据
@@ -17,17 +17,18 @@ start_0 = time.monotonic()
 df_ori = pd.read_excel('/Users/zc/PycharmProjects/fbprophet/gas_2015-2017.xlsx')
 df = df_ori.copy()
 df = df.interpolate(method='spline', order=3)  # 如果用dropna()不带参数，则行数可能会减少；也可不进行缺失值插值处理而用prophet自带插值方法
+# 增加前n日真实值序列作为相关变量，类似于增加自回归项；也可尝试增加n阶差分序列作为相关变量，更接近自回归模型的原理。
 df = df.rename(columns={"日期": "ds", "修正后用气量": "y", '最低气温': 'min_temp', '前一日': 'l1', '前两日': 'l2', '前三日': 'l3',
                         '前7日': 'l7', '季节': 'seas', '待预测日温度': 'f1_temp', '日期类型': 'datetype'})
-df.drop(columns=['l1', 'l2', 'l3', 'l7'], inplace=True)  # , 'seas', 'datetype'
+df.drop(columns=['seas'], inplace=True)  # 'l1', 'l2', 'l3', 'l7', 'seas', 'datetype'；因为'seas'与'y'的相关性较差，去掉后预测精度稍高些
 df['ds'] = pd.to_datetime(df['ds'])  # 确保日期类型为datetime64，才能与date_ranges和forecast做merge，因为它们的ds也是datetime64类型
 for i in range(1, len(df.columns)):
     df[df.columns[i]] = pd.to_numeric(df[df.columns[i]])
 if pearsonr(df['min_temp'], df['f1_temp'])[0] > 0.95:
-    df = df.drop(columns='f1_temp')  # 此时这两个变量相关性高于95%，应剔除一个
+    df = df.drop(columns='f1_temp')  # 此时这两个变量的线性相关性高于95%，剔除后可稍稍提高预测精度及加快预测速度
 
 # 生成回测的训练集和预测期数据：回测pred个点，回测频率为freq个点/次
-pred, freq = 365, 7
+pred, freq = 365, 1
 n = list(np.arange(freq, pred+1, freq))
 df_train, df_test = [], []
 df_test_all = df.drop(columns='y')
@@ -127,7 +128,7 @@ for i in range(len(df_train)-1, -1, -1):  # 此for循环不能和前一个for循
     # 对周季节性做自定义季节性处理，分为春节期间和非春节期间的周季节性
     m[i].add_seasonality(name='weekly_on_sf', period=7, fourier_order=5, prior_scale=10, condition_name='on_season',
                       mode='additive')
-    m[i].add_seasonality(name='weekly_off_sf', period=7, fourier_order=5, prior_scale=50, condition_name='off_season',
+    m[i].add_seasonality(name='weekly_off_sf', period=7, fourier_order=5, prior_scale=500, condition_name='off_season',
                       mode='additive')
     m[i].add_country_holidays(country_name='China')
     forecast = pd.concat([forecast, m[i].fit(df_train[i]).predict(df_test[i])], ignore_index=True)  # ignore_index=True忽略掉每一个df的索引，拼接后的df重新生成从0开始的索引
