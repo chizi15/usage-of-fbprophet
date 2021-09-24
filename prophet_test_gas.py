@@ -32,7 +32,7 @@ if pearsonr(df['min_temp'], df['f1_temp'])[0] > 0.95:
     df = df.drop(columns='f1_temp')  # 此时这两个变量的线性相关性高于95%，剔除后可稍稍提高预测精度及加快预测速度
 
 # 生成回测的训练集和预测期数据：回测pred个点，回测频率为freq个点/次
-pred, freq = 365, 1
+pred, freq = 365, 7
 n = list(np.arange(freq, pred + 1, freq))
 df_train, df_test = [], []
 df_test_all = df.drop(columns='y')
