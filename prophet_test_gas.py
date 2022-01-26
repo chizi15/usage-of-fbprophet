@@ -6,7 +6,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 import sys
-sys.path.append('/Users/ZC/PycharmProjects/PythonProjectProf/prophet/')
+sys.path.insert(0, '/Users/ZC/PycharmProjects/PythonProjectProf/functions/')
 import regression_evaluation_def as ref
 pd.set_option('mode.chained_assignment', None)
 pd.set_option('display.max_rows', None)
@@ -192,8 +192,8 @@ MAPE = ref.mape(y_true=comp['y_true'], y_pred=comp['yhat'])  # y_true为0时MAPE
 SMAPE = ref.smape(y_true=comp['y_true'], y_pred=comp['yhat'])  # y_true与y_pred均为0时SMAPE为inf
 RMSE = ref.rmse(y_true=comp['y_true'], y_pred=comp['yhat'])
 naive = df['y'][-len(comp['y_true']) - 1:-1].reset_index(drop=True)  # 对y_true做单步naive
-accuracy = ref.regression_accuracy(y_true=[comp['y_true']] * 2, y_pred=[comp['yhat'], naive])
-evaluation = ref.regression_evaluation(y_true=[comp['y_true']] * 2, y_pred=[comp['yhat'], naive])
+accuracy = ref.regression_accuracy_pairs(y_true=[comp['y_true']] * 2, y_pred=[comp['yhat'], naive])
+evaluation = ref.regression_evaluation_pairs(y_true=[comp['y_true']] * 2, y_pred=[comp['yhat'], naive])
 print('\n', '回测结果的MAPE为百分之 %.2f （此数值越接近0越好）' % (MAPE * 100))
 print(' 回测结果的SMAPE为百分之 %.2f （此数值越接近0越好）' % (SMAPE * 100))
 print(' 回测结果的RMSE为 %.4f （此数值越接近0越好）' % RMSE)
