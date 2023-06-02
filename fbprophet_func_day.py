@@ -21,6 +21,7 @@ Prophet = fbprophet.Prophet
 # 7.某一时期地区能源价格如电价、油价等，
 '''
 
+# test
 
 # 导入目标变量及相关变量
 data = pd.read_csv('test.csv')
